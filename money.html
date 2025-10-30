@@ -1,0 +1,1292 @@
+<!-- ...existing code... -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Articlarity | AI Text & Code Humanizer</title>
+    <meta name="description" content="Articlarity converts AI text to human language and comments AI code. Features interactive synonym swapping and AI detection scoring. Try it free!">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- SEO & Schema -->
+    <meta property="og:title" content="Articlarity | AI Text & Code Humanizer">
+    <meta property="og:description" content="Instantly convert AI text to natural, human-sounding language and comment AI-generated code. Free to use.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://articlarity.com"> <!-- Replace with your domain -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Articlarity | AI Text & Code Humanizer">
+    <meta name="twitter:description" content="Instantly convert AI text to natural, human-sounding language and comment AI-generated code. Free to use.">
+    
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Articlarity",
+      "url": "https://articlarity.com",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://articlarity.com/search?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      },
+      "mainEntity": {
+        "@type": "SoftwareApplication",
+        "name": "Articlarity",
+        "applicationCategory": "ProductivityApplication",
+        "operatingSystem": "Web",
+        "description": "A free online tool to convert AI-generated text into natural, human-sounding language and to add human-readable comments to AI-generated code.",
+        "url": "https://articlarity.com",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      }
+    }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa; /* Lighter gray for a cleaner look */
+        }
+        .ad-placeholder {
+            background: #f0f0f0;
+            border: 2px dashed #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 500;
+            color: #aaa;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        /* Custom loader */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Custom score bar */
+        .score-bar-bg {
+            background: #e5e7eb; /* gray-200 */
+            border-radius: 999px;
+            overflow: hidden;
+            height: 12px;
+        }
+        .score-bar-fill {
+            height: 100%;
+            border-radius: 999px;
+            transition: width 0.5s ease-in-out;
+        }
+
+        /* Toggle Switch */
+        .toggle-bg:after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            background: white;
+            border-radius: 999px;
+            height: 1.5rem;
+            width: 1.5rem;
+            transition: 0.3s;
+        }
+        input:checked + .toggle-bg:after {
+            transform: translateX(100%);
+            left: -2px; /* Adjust for perfect alignment */
+        }
+        input:checked + .toggle-bg {
+            background: #3b82f6; /* blue-600 */
+        }
+
+        /* Synonym Popover */
+        #synonym-popover {
+            display: none;
+            position: absolute;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 8px;
+            z-index: 10;
+            max-width: 250px;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .synonym-item {
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 14px;
+            background: #f3f4f6;
+            color: #374151;
+            transition: background 0.2s;
+        }
+        .synonym-item:hover {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        /* Placeholder for editable div */
+        [contenteditable=true]:empty:before {
+            content: attr(data-placeholder);
+            color: #9ca3af; /* gray-400 */
+            pointer-events: none;
+            display: block;
+        }
+        /* Styling for code output */
+        pre[contenteditable=true] {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: monospace;
+        }
+        /* Ensure <pre> tags use the placeholder */
+        pre:empty:before {
+            content: attr(data-placeholder);
+            color: #9ca3af; /* gray-400 */
+            pointer-events: none;
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <a href="#/" class="text-2xl font-bold text-blue-600">Articlarity</a>
+            <div class="hidden md:flex space-x-6">
+                <a href="#/" class="text-gray-600 hover:text-blue-600 font-medium transition-colors">Home</a>
+                <a href="#/about" class="text-gray-600 hover:text-blue-600 font-medium transition-colors">About</a>
+                <a href="#/blog" class="text-gray-600 hover:text-blue-600 font-medium transition-colors">Blog</a>
+                <a href="#/contact" class="text-gray-600 hover:text-blue-600 font-medium transition-colors">Contact</a>
+            </div>
+            <!-- Mobile Menu Button -->
+            <div class="md:hidden">
+                <button id="mobile-menu-btn" class="text-gray-600 hover:text-blue-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                </button>
+            </div>
+        </nav>
+        <!-- Mobile Menu (hidden by default) -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white shadow-lg">
+            <a href="#/" class="block px-4 py-3 text-gray-600 hover:bg-gray-100 hover:text-blue-600">Home</a>
+            <a href="#/about" class="block px-4 py-3 text-gray-600 hover:bg-gray-100 hover:text-blue-600">About</a>
+            <a href="#/blog" class="block px-4 py-3 text-gray-600 hover:bg-gray-100 hover:text-blue-600">Blog</a>
+            <a href="#/contact" class="block px-4 py-3 text-gray-600 hover:bg-gray-100 hover:text-blue-600">Contact</a>
+            <a href="#/privacy" class="block px-4 py-3 text-gray-600 hover:bg-gray-100 hover:text-blue-600">Privacy Policy</a>
+            <a href="#/terms" class="block px-4 py-3 text-gray-600 hover:bg-gray-100 hover:text-blue-600">Terms of Service</a>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main id="app-root" class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        <!-- Content will be injected here by JavaScript -->
+    </main>
+
+    <!-- Synonym Popover (hidden by default) -->
+    <div id="synonym-popover" role="dialog" aria-hidden="true" aria-label="Synonym suggestions">
+        <div id="synonym-list" class="flex flex-wrap gap-2"></div>
+        <div id="synonym-loader" class="hidden" aria-hidden="true">
+            <div class="loader w-4 h-4" style="border-width: 2px;"></div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-gray-400 mt-16">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h4 class="text-lg font-semibold text-white mb-3">Articlarity</h4>
+                    <p class="text-sm">Humanizing AI text and code. Built for creators, developers, and students to communicate with clarity.</p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold text-white mb-3">Quick Links</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#/about" class="hover:text-white transition-colors">About Us</a></li>
+                        <li><a href="#/blog" class="hover:text-white transition-colors">Blog</a></li>
+                        <li><a href="#/contact" class="hover:text-white transition-colors">Contact</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold text-white mb-3">Legal</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#/privacy" class="hover:text-white transition-colors">Privacy Policy</a></li>
+                        <li><a href="#/terms" class="hover:text-white transition-colors">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-sm">
+                <p>&copy; 2025 Articlarity. All rights reserved. Deployed free on Vercel.</p>
+                <!-- AdSense Privacy Disclaimer -->
+                <p class="mt-2 text-xs text-gray-500">
+                    This site uses cookies from Google to deliver its services and to analyze traffic. Information about your use of this site is shared with Google. By using this site, you agree to its use of cookies.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Cookie Consent Banner -->
+    <div id="cookie-banner" class="hidden fixed bottom-0 left-0 right-0 bg-gray-900 text-white p-4 z-50 shadow-lg">
+        <div class="container mx-auto flex flex-col md:flex-row justify-between items-center">
+            <p class="text-sm mb-3 md:mb-0">
+                We use cookies to ensure you get the best experience on our website. By continuing, you agree to our <a href="#/privacy" class="font-bold underline hover:text-blue-300">Privacy Policy</a>.
+            </p>
+            <button id="accept-cookies" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition-colors">
+                Got it!
+            </button>
+        </div>
+    </div>
+
+    <!-- JavaScript Module -->
+    <script type="module">
+        // --- SIMPLE HASH-BASED ROUTER ---
+        
+        const appRoot = document.getElementById('app-root');
+        
+        // We store all our "pages" as string templates for our simple router.
+        
+        const homePage = `
+            <div class="max-w-4xl mx-auto space-y-8">
+                <!-- Main Tool -->
+                <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg">
+                    <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4 text-center">AI Text & Code Humanizer</h1>
+                    <p class="text-lg text-gray-600 mb-6 text-center">
+                        Instantly make your AI content sound human or add clear comments to your AI code.
+                    </p>
+                    
+                    <!-- NEW: Tool Mode Toggle -->
+                    <div class="flex justify-center items-center space-x-4 mb-6">
+                        <span id="text-label" class="text-lg font-semibold text-blue-600">Text</span>
+                        <label for="mode-toggle" class="flex items-center cursor-pointer">
+                            <div class="relative">
+                                <input type="checkbox" id="mode-toggle" class="sr-only">
+                                <div class="toggle-bg block bg-gray-300 w-12 h-7 rounded-full transition-colors"></div>
+                            </div>
+                        </label>
+                        <span id="code-label" class="text-lg font-semibold text-gray-400">Code</span>
+                    </div>
+
+                    <!-- Input / Output Textareas -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <!-- Input -->
+                        <div class="flex flex-col">
+                            <textarea id="text-input" class="w-full h-80 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" placeholder="Paste your AI text or code here..."></textarea>
+                            <div class="flex justify-between items-center mt-2 px-1">
+                                <span id="input-word-count" class="text-sm text-gray-500">0 words / 0 chars</span>
+                                <button id="upload-btn" class="text-sm text-blue-600 hover:underline font-medium">
+                                    Upload .txt
+                                    <input type="file" id="file-input" class="hidden" accept=".txt">
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Output -->
+                        <div class="flex flex-col">
+                            <div id="text-output-wrapper" class="w-full h-80 border border-gray-200 bg-gray-50 rounded-lg relative">
+                                <!-- Loader -->
+                                <div id="output-loader" class="hidden absolute inset-0 bg-gray-50 bg-opacity-80 flex items-center justify-center rounded-lg z-20">
+                                    <div class="loader"></div>
+                                </div>
+                                <!-- NEW: Editable Div for Synonyms -->
+                                <div id="text-output" class="w-full h-full p-4 overflow-y-auto resize-none focus:outline-none" contenteditable="false" data-placeholder="Your humanized text will appear here..."></div>
+                                <!-- STYLES MOVED TO HEAD -->
+                            </div>
+                            <div class="flex justify-between items-center mt-2 px-1">
+                                <span id="output-word-count" class="text-sm text-gray-500">0 words / 0 chars</span>
+                                <button id="copy-btn" class="text-sm text-blue-600 hover:underline font-medium">
+                                    Copy Text
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Feature: Tones (Only for Text Mode) -->
+                    <div id="tone-selector-wrapper" class="mb-6">
+                        <label class="block text-lg font-medium text-gray-800 mb-3">Select Humanization Tone:</label>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <div>
+                                <input type="radio" id="tone-casual" name="tone" value="Casual" class="hidden peer" checked>
+                                <label for="tone-casual" class="block w-full text-center py-2 px-3 border border-gray-300 rounded-lg cursor-pointer text-sm font-medium text-gray-700 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 hover:bg-gray-100 transition-colors">
+                                    Casual
+                                </label>
+                            </div>
+                            <div>
+                                <input type="radio" id="tone-professional" name="tone" value="Professional" class="hidden peer">
+                                <label for="tone-professional" class="block w-full text-center py-2 px-3 border border-gray-300 rounded-lg cursor-pointer text-sm font-medium text-gray-700 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 hover:bg-gray-100 transition-colors">
+                                    Professional
+                                </label>
+                            </div>
+                            <div>
+                                <input type="radio" id="tone-friendly" name="tone" value="Friendly" class="hidden peer">
+                                <label for="tone-friendly" class="block w-full text-center py-2 px-3 border border-gray-300 rounded-lg cursor-pointer text-sm font-medium text-gray-700 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 hover:bg-gray-100 transition-colors">
+                                    Friendly
+                                </label>
+                            </div>
+                            <div>
+                                <input type="radio" id="tone-persuasive" name="tone" value="Persuasive" class="hidden peer">
+                                <label for="tone-persuasive" class="block w-full text-center py-2 px-3 border border-gray-300 rounded-lg cursor-pointer text-sm font-medium text-gray-700 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 hover:bg-gray-100 transition-colors">
+                                    Persuasive
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Main Action Button -->
+                    <div class="flex flex-col sm:flex-row items-center justify-center">
+                        <button id="humanize-btn" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-all shadow-md hover:shadow-lg text-lg">
+                            Humanize
+                        </button>
+                    </div>
+                    <div id="error-message" class="text-red-600 mt-4 text-sm font-medium hidden text-center" role="alert" aria-live="polite"></div>
+                </div>
+
+                <!-- Feature: AI & Clarity Score Panel -->
+                <div id="score-panel" class="hidden bg-white p-6 sm:p-8 rounded-2xl shadow-lg">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-6 text-center">Clarity & AI Score Analysis</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Before Score -->
+                        <div class="bg-gray-50 border border-gray-200 p-4 rounded-lg">
+                            <h4 class="font-semibold text-lg text-gray-800 mb-4">Before (Your Text)</h4>
+                            <div class="space-y-3">
+                                <div>
+                                    <div class="flex justify-between items-center mb-1">
+                                        <span class="text-sm font-medium text-gray-700">AI Detection Risk</span>
+                                        <span id="before-ai-text" class="text-sm font-bold text-red-600">High</span>
+                                    </div>
+                                    <div class="score-bar-bg">
+                                        <div id="before-ai-bar" class="score-bar-fill bg-red-500" style="width: 0%;"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center mb-1">
+                                        <span class="text-sm font-medium text-gray-700">Readability</span>
+                                        <span id="before-readability-text" class="text-sm font-bold text-yellow-600">Difficult</span>
+                                    </div>
+                                    <div class="score-bar-bg">
+                                        <div id="before-readability-bar" class="score-bar-fill bg-yellow-500" style="width: 0%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- After Score -->
+                        <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+                            <h4 class="font-semibold text-lg text-gray-800 mb-4">After (Articlarity)</h4>
+                            <div class="space-y-3">
+                                <div>
+                                    <div class="flex justify-between items-center mb-1">
+                                        <span class="text-sm font-medium text-gray-700">AI Detection Risk</span>
+                                        <span id="after-ai-text" class="text-sm font-bold text-green-600">Low</span>
+                                    </div>
+                                    <div class="score-bar-bg">
+                                        <div id="after-ai-bar" class="score-bar-fill bg-green-500" style="width: 0%;"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center mb-1">
+                                        <span class="text-sm font-medium text-gray-700">Readability</span>
+                                        <span id="after-readability-text" class="text-sm font-bold text-green-600">Easy</span>
+                                    </div>
+                                    <div class="score-bar-bg">
+                                        <div id="after-readability-bar" class="score-bar-fill bg-green-500" style="width: 0%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AdSense Placeholder: Below Tool -->
+                <div class="mt-8">
+                    <div class="ad-placeholder h-24 w-full">AdSense Leaderboard (728x90) or Responsive</div>
+                </div>
+                
+                <!-- NEW: Full-width sections (replaces sidebar) -->
+                <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg">
+                    <h3 class="text-2xl font-bold mb-4 text-center">How It Works</h3>
+                    <ol class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                        <li class="space-y-2">
+                            <div class="flex items-center justify-center w-12 h-12 bg-blue-100 text-blue-600 font-bold text-lg rounded-full mx-auto">1</div>
+                            <h4 class="font-medium text-gray-800">Paste & Select Mode</h4>
+                            <p class="text-gray-600 text-sm">Drop your AI text or code. Choose "Text" for articles or "Code" for programming scripts.</p>
+                        </li>
+                        <li class="space-y-2">
+                            <div class="flex items-center justify-center w-12 h-12 bg-blue-100 text-blue-600 font-bold text-lg rounded-full mx-auto">2</div>
+                            <h4 class="font-medium text-gray-800">Click Humanize</h4>
+                            <p class="text-gray-600 text-sm">Our advanced AI analyzes and rewrites the content. (For text, you can also pick a tone!).</p>
+                        </li>
+                        <li class="space-y-2">
+                            <div class="flex items-center justify-center w-12 h-12 bg-blue-100 text-blue-600 font-bold text-lg rounded-full mx-auto">3</div>
+                            <h4 class="font-medium text-gray-800">Refine & Copy</h4>
+                            <p class="text-gray-600 text-sm">Get natural text or commented code. Double-click words (in Text mode) to swap synonyms!</p>
+                        </li>
+                    </ol>
+                </div>
+                
+                <!-- AdSense Placeholder: Sidebar -->
+                <div class="ad-placeholder h-64 w-full">AdSense MPU (300x250)</div>
+
+                <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg">
+                    <h3 class="text-2xl font-bold mb-6 text-center">Why Choose Articlarity?</h3>
+                    <ul class="grid grid-cols-1 md:grid-cols-3 gap-6 text-gray-600">
+                        <li class="flex items-start space-x-3">
+                            <span class="text-blue-500 mt-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
+                            </span>
+                            <div>
+                                <h4 class="font-medium text-gray-800">Code Commenter</h4>
+                                <p class="text-sm">Our AI doesn't just write text. It reads, understands, and comments complex code, making it easy for humans to read.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start space-x-3">
+                            <span class="text-blue-500 mt-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                            </span>
+                            <div>
+                                <h4 class="font-medium text-gray-800">Synonym Swapper</h4>
+                                <p class="text-sm">Don't just accept the output. Take control. Double-click any word to see a list of smart synonyms and refine your text to perfection.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start space-x-3">
+                            <span class="text-blue-500 mt-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                            </span>
+                            <div>
+                                <h4 class="font-medium text-gray-800">Pass AI Detection</h4>
+                                <p class="text-sm">Our rewritten text is designed to have the perplexity and burstiness of human writing, making it undetectable by common AI checkers.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        `;
+
+        const aboutPage = `
+            <div class="max-w-3xl mx-auto bg-white p-6 sm:p-10 rounded-2xl shadow-lg">
+                <h1 class="text-3xl font-bold text-gray-900 mb-6">About Articlarity</h1>
+                <div class="prose prose-lg text-gray-700 max-w-none space-y-4">
+                    <p>Welcome to Articlarity, your new partner in the age of artificial intelligence. We believe AI is a powerful tool, but we also know it can sometimes... well, sound a bit like a robot.</p>
+                    <p>Our mission is simple: to bridge the gap between artificial intelligence and human connection. We're not here to replace AI; we're here to refine it. We built Articlarity for the people who are building the future: the students, the bloggers, the marketers, and the developers.</p>
+                    
+                    <h2 class="text-2xl font-semibold text-gray-800 pt-4">Why We Built This</h2>
+                    <p>We saw a common problem. Students were getting flagged for using AI, even when just using it for help. Marketers were creating content that felt cold and impersonal. Developers were spending more time trying to understand AI-generated code than it would have taken to write it from scratch.</p>
+                    <p>Articlarity is our answer. It's more than just a "humanizer." It's a suite of tools designed to add clarity, warmth, and understanding to AI-generated content.</p>
+                    
+                    <h2 class="text-2xl font-semibold text-gray-800 pt-4">Our Unique Features</h2>
+                    <ul class="list-disc pl-5">
+                        <li><strong>For Writers:</strong> We don't just spin your text. We analyze its tone, sentence structure, and word choice. You can choose a "Casual" tone for a blog post or a "Professional" tone for a report, and our interactive "Synonym Swapper" puts you in the driver's seat.</li>
+                        <li><strong>For Developers:</strong> We're developers, too. We were tired of AI tools spitting out uncommented, hard-to-read code. Our "Code Commenter" mode analyzes your script and adds clear, human-readable comments to explain *what* the code is doing and *why*.</li>
+                    </ul>
+                    
+                    <h2 class="text-2xl font-semibold text-gray-800 pt-4">Our Commitment to You</h2>
+                    <p>Articlarity is (and always will be) a free tool. We believe essential utilities should be accessible to everyone. We support our work through unobtrusive advertising, which allows us to keep the servers running and constantly improve our models.</p>
+                    <p>Thank you for trusting us with your content. We can't wait to see what you create.</p>
+                </div>
+                
+                <!-- AdSense Placeholder: In-Article -->
+                <div class="mt-12">
+                    <div class="ad-placeholder h-48 w-full">AdSense In-Article Ad</div>
+                </div>
+            </div>
+        `;
+        
+        const contactPage = `
+            <div class="max-w-3xl mx-auto bg-white p-6 sm:p-10 rounded-2xl shadow-lg">
+                <h1 class="text-3xl font-bold text-gray-900 mb-6">Get in Touch</h1>
+                <div class="prose text-gray-700 max-w-none space-y-4">
+                    <p>We love hearing from our users! Whether you have a question, a feature request, or just want to say hi, feel free to reach out. We are a small team, but we do our best to respond to every message.</p>
+                    
+                    <h2 class="text-xl font-semibold text-gray-800 pt-4">Feature Requests & Bug Reports</h2>
+                    <p>Found a bug? Have a brilliant idea for a new feature? We want to hear it! Your feedback is what makes Articlarity better. Please be as detailed as possible so we can understand your request.</p>
+                    
+                    <h2 class="text-xl font-semibold text-gray-800 pt-4">AdSense & Partnership Inquiries</h2>
+                    <p>For any inquiries related to advertising on our platform or potential partnerships, please reach out with a clear subject line. We are always open to exploring opportunities that align with our users' interests.</p>
+                    
+                    <p class="font-medium text-gray-800">You can email us directly at:</p>
+                    <p class="text-lg font-semibold text-blue-600">hello@articlarity.com</p>
+                    <p class="text-sm">(Please note: We do not offer customer support for rewriting specific texts. The tool is provided as-is.)</p>
+                </div>
+            </div>
+        `;
+        
+        const privacyPage = `
+            <div class="max-w-3xl mx-auto bg-white p-6 sm:p-10 rounded-2xl shadow-lg">
+                <h1 class="text-3xl font-bold text-gray-900 mb-6">Privacy Policy</h1>
+                <div class="prose text-gray-700 max-w-none space-y-4">
+                    <p><strong>Last Updated: October 31, 2025</strong></p>
+                    
+                    <p>Your privacy is important to us. It is Articlarity's policy to respect your privacy regarding any information we may collect from you across our website, <a href="https://articlarity.com" class="text-blue-600">https://articlarity.com</a>.</p>
+                    
+                    <h2 class="text-2xl font-semibold text-gray-800 pt-4">Information We Collect</h2>
+                    <p>We only ask for personal information when we truly need it to provide a service to you. We collect it by fair and lawful means, with your knowledge and consent. We also let you know why we’re collecting it and how it will be used.</p>
+                    <p><strong>We do not save, store, or log any text or code you submit into our humanizer tool.</strong> Your content is processed in real-time and immediately discarded after the humanized output is generated and sent back to you. Your inputs are your own.</p>
+                    
+                    <h2 class="text-2xl font-semibold text-gray-800 pt-4">Cookies and Web Analytics</h2>
+                    <p>We use "cookies" to collect information about you and your activity across our site. A cookie is a small piece of data that our website stores on your computer and accesses each time you visit, so we can understand how you use our site. This helps us serve you content based on preferences you have specified.</p>
+                    <p>We may use third-party services such as Google Analytics to collect and analyze usage data. This data is aggregated and anonymous and helps us understand website traffic and webpage usage.</p>
+                    
+                    <h2 class="text-2xl font-semibold text-gray-800 pt-4">Google AdSense</h2>
+                    <p>We use Google AdSense to serve advertising on our site. Google's use of the DoubleClick cookie enables it and its partners to serve ads to our users based on their visit to our sites and/or other sites on the Internet.</p>
+                    <p>Users may opt out of the use of the DoubleClick cookie for interest-based advertising by visiting the <a href="https://adssettings.google.com/" class="text-blue-600" target="_blank" rel="noopener noreferrer">Google Ads Settings</a> page.</p>
+
+                    <h2 class="text-2xl font-semibold text-gray-800 pt-4">Links to Other Sites</h2>
+                    <p>Our website may link to external sites that are not operated by us. Please be aware that we have no control over the content and practices of these sites, and cannot accept responsibility or liability for their respective privacy policies.</p>
+                    
+                    <h2 class="text-2xl font-semibold text-gray-800 pt-4">Your Acceptance of These Terms</h2>
+                    <p>Your continued use of our website will be regarded as acceptance of our practices around privacy and personal information. If you have any questions about how we handle user data and personal information, feel free to contact us at <strong>hello@articlarity.com</strong>.</p>
+                </div>
+            </div>
+        `;
+
+        const termsPage = `
+            <div class="max-w-3xl mx-auto bg-white p-6 sm:p-10 rounded-2xl shadow-lg">
+                <h1 class="text-3xl font-bold text-gray-900 mb-6">Terms of Service</h1>
+                <div class="prose text-gray-700 max-w-none space-y-4">
+                    <p><strong>Last Updated: October 31, 2025</strong></p>
+
+                    <p>Please read these Terms of Service ("Terms", "Terms of Service") carefully before using the <a href="https://articlarity.com" class="text-blue-600">https://articlarity.com</a> website (the "Service") operated by Articlarity ("us", "we", or "our").</p>
+                    
+                    <p>Your access to and use of the Service is conditioned on your acceptance of and compliance with these Terms. These Terms apply to all visitors, users, and others who access or use the Service.</p>
+                    
+                    <p>By accessing or using the Service, you agree to be bound by these Terms. If you disagree with any part of the terms, then you may not access the Service.</p>
+
+                    <h2 class="text-2xl font-semibold text-gray-800 pt-4">1. Use of Service</h2>
+                    <p>Articlarity provides a free, ad-supported tool for humanizing AI-generated text and commenting code. You agree not to use the Service for any unlawful purpose or in any way that could damage, disable, overburden, or impair the Service.</p>
+                    <p>You agree not to use any automated system, including "robots," "spiders," or "offline readers," to access the Service in a manner that sends more request messages to the servers than a human can reasonably produce in the same period by using a conventional web browser.</p>
+
+                    <h2 class="text-2xl font-semibold text-gray-800 pt-4">2. User-Submitted Content</h2>
+                    <p>We do not claim ownership of any text, code, or other materials you submit to the Service. We do not store or log your inputs. You are solely responsible for the content you submit and for ensuring it does not violate any copyright, trademark, or other intellectual property rights.</p>
+                    <p>You agree not to submit any content that is unlawful, harmful, threatening, abusive, defamatory, or otherwise objectionable.</p>
+                    
+                    <h2 class="text-2xl font-semibold text-gray-800 pt-4">3. Disclaimer of Warranties</h2>
+                    <p>The Service is provided on an "AS IS" and "AS AVAILABLE" basis. The Service is provided without warranties of any kind, whether express or implied, including, but not limited to, implied warranties of merchantability, fitness for a particular purpose, non-infringement, or course of performance.</p>
+                    <p>Articlarity does not warrant that the results of using the Service will be accurate, reliable, or meet your requirements, or that the Service will be uninterrupted or error-free. The "AI Detection Score" is a simulation and not a guarantee of any kind.</p>
+                    
+                    <h2 class="text-2xl font-semibold text-gray-800 pt-4">4. Limitation of Liability</h2>
+                    <p>In no event shall Articlarity, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential, or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from (i) your access to or use of or inability to access or use the Service; (ii) any conduct or content of any third party on the Service; (iii) any content obtained from the Service; and (iv) unauthorized access, use, or alteration of your transmissions or content, whether based on warranty, contract, tort (including negligence) or any other legal theory, whether or not we have been informed of the possibility of such damage.</p>
+                    
+                    <h2 class="text-2xl font-semibold text-gray-800 pt-4">5. Changes to Terms</h2>
+                    <p>We reserve the right, at our sole discretion, to modify or replace these Terms at any time. We will provide notice of any changes by posting the new Terms on this page. Your continued use of the Service after any such changes constitutes your acceptance of the new Terms.</p>
+                    
+                    <h2 class="text-2xl font-semibold text-gray-800 pt-4">Contact Us</h2>
+                    <p>If you have any questions about these Terms, please contact us at <strong>hello@articlarity.com</strong>.</p>
+                </div>
+            </div>
+        `;
+        
+        const blogPage = `
+            <div class="max-w-3xl mx-auto">
+                <h1 class="text-3xl font-bold text-gray-900 mb-8">The Articlarity Blog</h1>
+                <div class="space-y-8">
+                    <!-- Blog Post 1 -->
+                    <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg transition-shadow hover:shadow-xl">
+                        <a href="#/blog/post-1" class="block">
+                            <h2 class="text-2xl font-semibold text-gray-800 hover:text-blue-600 transition-colors mb-2">Why Google Detects AI Text (and How to Fix It)</h2>
+                            <p class="text-gray-600 mb-4">You've spent hours crafting the "perfect" article with AI, only to see it tank in Google rankings. What's going on? Google is getting scarily good at...
+                            </p>
+                            <span class="text-blue-600 font-medium">Read more &rarr;</span>
+                        </a>
+                    </div>
+                    
+                    <!-- Blog Post 2 -->
+                    <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg transition-shadow hover:shadow-xl">
+                        <a href="#/blog/post-2" class="block">
+                            <h2 class="text-2xl font-semibold text-gray-800 hover:text-blue-600 transition-colors mb-2">5 Easy Tricks to Make AI Text Sound Human</h2>
+                            <p class="text-gray-600 mb-4">Artificial intelligence is a great writing partner, but it often lacks a human touch. Its writing can be robotic, repetitive, and...
+                            </p>
+                            <span class="text-blue-600 font-medium">Read more &rarr;</span>
+                        </a>
+                    </div>
+                    
+                    <!-- Blog Post 3 -->
+                    <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg transition-shadow hover:shadow-xl">
+                        <a href="#/blog/post-3" class="block">
+                            <h2 class="text-2xl font-semibold text-gray-800 hover:text-blue-600 transition-colors mb-2">Top 3 Free AI Tools for Students in 2025</h2>
+                            <p class="text-gray-600 mb-4">Forget just using AI for essays. The game has changed. As we head into 2025, the best AI tools for students are all about...
+                            </p>
+                            <span class="text-blue-600 font-medium">Read more &rarr;</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // --- BLOG POSTS ---
+        
+        const blogPost1 = `
+            <div class="max-w-3xl mx-auto bg-white p-6 sm:p-10 rounded-2xl shadow-lg">
+                <a href="#/blog" class="text-blue-600 hover:underline mb-6 block">&larr; Back to Blog</a>
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Why Google Detects AI Text (and How to Fix It)</h1>
+                <p class="text-lg text-gray-600 mb-6">Published on October 30, 2025</p>
+                
+                <div class="prose prose-lg text-gray-700 max-w-none space-y-4">
+                    <p>You've spent hours crafting the "perfect" article with AI, only to see it tank in Google rankings. What's going on? Google is getting scarily good at detecting AI-generated content, and they've been open about prioritizing "helpful content, created by people, for people."</p>
+                    <p>But why does AI text stick out so much? It comes down to two main concepts: <strong>perplexity</strong> and <strong>burstiness</strong>.</p>
+                    
+                    <h2 class="text-2xl font-semibold text-gray-800 pt-4">1. Perplexity: The "Surprise" Factor</h2>
+                    <p>Perplexity, in simple terms, measures how predictable a piece of text is. AI models are trained to choose the <em>most likely</em> next word, over and over. This makes their writing incredibly smooth, logical, and... predictable.</p>
+                    <p>Human writing, on the other hand, is wonderfully chaotic. We use weird analogies, choose less common synonyms, and structure our sentences in surprising ways. Our perplexity is <em>high</em>. AI writing's perplexity is <em>low</em>. Google's algorithms can spot this low-perplexity text from a mile away.</p>
+                    
+                    <h2 class="text-2xl font-semibold text-gray-800 pt-4">2. Burstiness: The Rhythm of Writing</h2>
+                    <p>Burstiness refers to the variation in sentence length and structure. Humans write in bursts. We'll write a few short, punchy sentences, followed by a long, complex one that winds its way to a point. It creates a rhythm.</p>
+                    <p>AI models tend to write with a monotonous, uniform sentence length. Almost every sentence is of medium length, following a similar subject-verb-object structure. This lack of "burstiness" is a dead giveaway that a machine did the writing.</p>
+                    
+                    <!-- AdSense Placeholder: In-Article -->
+                    <div class="my-8">
+                        <div class="ad-placeholder h-48 w-full">AdSense In-Article Ad</div>
+                    </div>
+                    
+                    <h2 class="text-2xl font-semibold text-gray-800 pt-4">How to Fix It (The Right Way)</h2>
+                    <p>So, do you have to abandon AI? Absolutely not. You just have to be the human editor in the loop. This is where tools like Articlarity come in.</p>
+                    <ul class="list-disc pl-5">
+                        <li><strong>Vary Your Sentences:</strong> Go through your AI draft and actively break up sentences. Combine some short ones. Split long ones. Turn a statement into a question.</li>
+                        <li><strong>Inject Your Voice:</strong> This is the most important part. Add your own stories, opinions, and analogies. Use contractions (like "it's" or "you're"). AI models tend to avoid these, sounding overly formal.</li>
+                        <li><strong>Swap "Perfect" Words:</strong> AI often uses the most "correct" or "academic" word. Use a tool (like our Synonym Swapper) to find more interesting or casual alternatives. Instead of "utilize," write "use." Instead of "moreover," try "plus."</li>
+                    </ul>
+                    <p>By focusing on increasing the perplexity and burstiness, you're not just "tricking" Google. You're genuinely making the content better, more engaging, and more helpful for your human readers. And in the end, that's all Google has ever wanted.</p>
+                </div>
+            </div>
+        `;
+
+        const blogPost2 = `
+            <div class="max-w-3xl mx-auto bg-white p-6 sm:p-10 rounded-2xl shadow-lg">
+                <a href="#/blog" class="text-blue-600 hover:underline mb-6 block">&larr; Back to Blog</a>
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">5 Easy Tricks to Make AI Text Sound Human</h1>
+                <p class="text-lg text-gray-600 mb-6">Published on October 28, 2025</p>
+                
+                <div class="prose prose-lg text-gray-700 max-w-none space-y-4">
+                    <p>Artificial intelligence is a great writing partner, but it often lacks a human touch. Its writing can be robotic, repetitive, and just plain... boring. The good news is, it only takes a few small edits to breathe life into your AI content. Here are 5 easy tricks you can use right now.</p>
+
+                    <h2 class="text-2xl font-semibold text-gray-800 pt-4">1. Use Contractions (Seriously)</h2>
+                    <p>AIs are taught to be formal. They will write "it is," "you are," and "do not." Humans almost never talk or write like that in a casual setting. Simply changing these to "it's," "you're," and "don't" instantly makes your text more conversational and relatable.</p>
+                    
+                    <h2 class="text-2xl font-semibold text-gray-800 pt-4">2. Ask Questions</h2>
+                    <p>AI models are built to provide answers. They make statements. Humans, on the other hand, engage their readers by asking rhetorical questions. See what I did there? Sprinkling in a few questions (like "But what does this really mean?" or "Sound familiar?") breaks up the text and makes your reader feel like part of a conversation.</p>
+                    
+                    <!-- AdSense Placeholder: In-Article -->
+                    <div class="my-8">
+                        <div class="ad-placeholder h-48 w-full">AdSense In-Article Ad</div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const blogPost3 = `
+            <div class="max-w-3xl mx-auto bg-white p-6 sm:p-10 rounded-2xl shadow-lg">
+                <a href="#/blog" class="text-blue-600 hover:underline mb-6 block">&larr; Back to Blog</a>
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Top 3 Free AI Tools for Students in 2025</h1>
+                <p class="text-lg text-gray-600 mb-6">Published on October 25, 2025</p>
+                
+                <div class="prose prose-lg text-gray-700 max-w-none space-y-4">
+                    <p>Forget just using AI for essays. The game has changed. As we head into 2025, the best AI tools for students are all about enhancing your learning, not just doing the work for you. Here are the top 3 free tools every student should have in their digital backpack.</p>
+                    
+                    <h2 class="text-2xl font-semibold text-gray-800 pt-4">1. Articlarity (For Humanizing Your Drafts)</h2>
+                    <p>Okay, we're a little biased, but hear us out. You've used an AI to help brainstorm or build a rough draft. But you can't submit that! It sounds robotic, and professors can spot it instantly. That's where our tool comes in. You paste your draft, and Articlarity rewrites it to sound natural and human, using contractions and varied sentences. It helps you turn a clunky AI draft into a polished "A" paper, <em>in your own voice</em>.</p>
+                    
+                    <!-- AdSense Placeholder: In-Article -->
+                    <div class="my-8">
+                        <div class="ad-placeholder h-48 w-full">AdSense In-Article Ad</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Router logic
+        const routes = {
+            '/': homePage,
+            '/about': aboutPage,
+            '/contact': contactPage,
+            '/privacy': privacyPage,
+            '/terms': termsPage,
+            '/blog': blogPage,
+            '/blog/post-1': blogPost1,
+            '/blog/post-2': blogPost2,
+            '/blog/post-3': blogPost3,
+        };
+        
+        function renderPage() {
+            const path = window.location.hash.substring(1) || '/';
+            const template = routes[path];
+            
+            if (template) {
+                appRoot.innerHTML = template;
+                window.scrollTo(0, 0); // Scroll to top on page change
+                
+                // Re-attach event listeners for the home page if we are on it
+                if (path === '/') {
+                    attachHomeListeners();
+                }
+            } else {
+                // Simple 404
+                appRoot.innerHTML = `<h1 class="text-3xl font-bold text-center">404 - Page Not Found</h1>`;
+            }
+        }
+
+        window.addEventListener('hashchange', renderPage);
+        window.addEventListener('load', () => {
+            renderPage();
+            initCookieBanner();
+            initMobileMenu();
+        });
+        
+        // --- HOME PAGE LOGIC ---
+        
+        // Global var to store selected word for synonym
+        let selectedWordElement = null;
+
+        function attachHomeListeners() {
+            const humanizeBtn = document.getElementById('humanize-btn');
+            const modeToggle = document.getElementById('mode-toggle');
+            const textInput = document.getElementById('text-input');
+            const textOutput = document.getElementById('text-output');
+            const copyBtn = document.getElementById('copy-btn');
+            const uploadBtn = document.getElementById('upload-btn');
+            const fileInput = document.getElementById('file-input');
+            
+            if (humanizeBtn) {
+                humanizeBtn.addEventListener('click', handleHumanizeClick);
+            }
+            if (modeToggle) {
+                modeToggle.addEventListener('change', handleModeChange);
+            }
+            if (textInput) {
+                textInput.addEventListener('input', () => updateWordCount('input'));
+            }
+            if (textOutput) {
+                textOutput.addEventListener('input', () => updateWordCount('output'));
+                // NEW: Add listener for synonym swapping
+                textOutput.addEventListener('dblclick', handleSynonymSwap);
+            }
+            if (copyBtn) {
+                copyBtn.addEventListener('click', handleCopy);
+            }
+            if (uploadBtn) {
+                uploadBtn.addEventListener('click', () => fileInput.click());
+            }
+            if (fileInput) {
+                fileInput.addEventListener('change', handleFileUpload);
+            }
+
+            // Hide popover on outside click
+            document.addEventListener('click', (e) => {
+                const popover = document.getElementById('synonym-popover');
+                const output = document.getElementById('text-output');
+                if (!popover) return;
+                if (!popover.contains(e.target) && (!output || !output.contains(e.target))) {
+                    popover.style.display = 'none';
+                    popover.setAttribute('aria-hidden', 'true');
+                    selectedWordElement = null;
+                }
+            });
+
+            // Init counts
+            updateWordCount('input');
+            updateWordCount('output');
+        }
+        
+        async function handleHumanizeClick() {
+            const textInput = document.getElementById('text-input');
+            let textOutput = document.getElementById('text-output');
+            const loader = document.getElementById('output-loader');
+            const errorMessage = document.getElementById('error-message');
+            const humanizeBtn = document.getElementById('humanize-btn');
+            const scorePanel = document.getElementById('score-panel');
+            
+            // Get mode
+            const mode = document.getElementById('mode-toggle').checked ? 'code' : 'text';
+            
+            // Get the selected tone
+            const selectedTone = document.querySelector('input[name="tone"]:checked').value || 'Casual';
+            
+            const text = (textInput && textInput.value) ? textInput.value : '';
+            
+            if (!text.trim() || text.length < 20) {
+                showError("Please enter at least 20 characters to humanize.");
+                return;
+            }
+            
+            // Show loading state
+            if (loader) loader.classList.remove('hidden');
+            if (errorMessage) errorMessage.classList.add('hidden');
+            if (scorePanel) scorePanel.classList.add('hidden'); // Hide score panel on new request
+            if (humanizeBtn) {
+                humanizeBtn.disabled = true;
+                humanizeBtn.textContent = (mode === 'code') ? 'Adding comments...' : 'Humanizing...';
+            }
+            
+            // Clear output and set state
+            if (mode === 'code') {
+                if (textOutput) textOutput.outerHTML = `<pre id="text-output" class="w-full h-full p-4 overflow-y-auto resize-none focus:outline-none" contenteditable="false" data-placeholder="Your commented code will appear here..."></pre>`;
+            } else {
+                if (textOutput) textOutput.outerHTML = `<div id="text-output" class="w-full h-full p-4 overflow-y-auto resize-none focus:outline-none" contenteditable="false" data-placeholder="Your humanized text will appear here..."></div>`;
+            }
+
+            // Re-acquire the new element and attach listeners
+            textOutput = document.getElementById('text-output');
+            if (textOutput) {
+                textOutput.addEventListener('dblclick', handleSynonymSwap);
+                textOutput.addEventListener('input', () => updateWordCount('output'));
+            }
+
+            try {
+                // --- THIS IS THE REAL API CALL ---
+                const response = await fetch('/api/humanize', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        text: text, 
+                        tone: selectedTone,
+                        mode: mode // Send mode to API
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: "An unknown API error occurred." }));
+                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const outputElement = document.getElementById('text-output'); // Get the fresh element
+                
+                if (!outputElement) throw new Error("Output element not found.");
+
+                if (mode === 'code') {
+                    // For code, we don't typewrite. We just set the formatted text.
+                    outputElement.textContent = data.humanizedText || '';
+                    if (scorePanel) scorePanel.classList.add('hidden'); // Hide score for code
+                    updateWordCount('output');
+                } else {
+                    // For text, typewrite and enable editing for synonyms
+                    typewriterEffect(data.humanizedText || '', outputElement, () => {
+                        // This callback runs after typing is finished
+                        // Now, calculate and display the scores
+                        try {
+                            updateAnalytics(text, data.humanizedText || '');
+                            if (scorePanel) scorePanel.classList.remove('hidden');
+                        } catch (err) {
+                            console.warn('Analytics update failed', err);
+                        }
+                        outputElement.contentEditable = "true"; // Allow editing *after* typing
+                        updateWordCount('output');
+                    });
+                }
+                
+            } catch (error) {
+                console.error('Fetch error:', error);
+                showError(`Error: ${error.message}`);
+            } finally {
+                // Hide loading state
+                if (loader) loader.classList.add('hidden');
+                if (humanizeBtn) {
+                    humanizeBtn.disabled = false;
+                    humanizeBtn.textContent = (mode === 'code') ? 'Add Comments' : 'Humanize';
+                }
+            }
+        }
+        
+        function typewriterEffect(text, element, callback) {
+            let i = 0;
+            element.textContent = ''; // Use textContent for divs/pre
+            
+            function type() {
+                if (i < text.length) {
+                    element.textContent += text.charAt(i);
+                    i++;
+                    setTimeout(type, 5); // Faster speed
+                } else {
+                    if (typeof callback === 'function') callback(); // Run the callback function when done
+                }
+            }
+            type();
+        }
+
+        function showError(message) {
+            const errorMessage = document.getElementById('error-message');
+            if (errorMessage) {
+                errorMessage.textContent = message;
+                errorMessage.classList.remove('hidden');
+                errorMessage.setAttribute('aria-hidden', 'false');
+            } else {
+                // Fallback alert
+                alert(message);
+            }
+        }
+
+        // --- NEW: Mode Change Logic ---
+        function handleModeChange() {
+            const isCodeMode = document.getElementById('mode-toggle').checked;
+            const toneWrapper = document.getElementById('tone-selector-wrapper');
+            const scorePanel = document.getElementById('score-panel');
+            const textLabel = document.getElementById('text-label');
+            const codeLabel = document.getElementById('code-label');
+            const humanizeBtn = document.getElementById('humanize-btn');
+            let textOutput = document.getElementById('text-output');
+
+            if (!textOutput) return;
+
+            if (isCodeMode) {
+                // Code Mode
+                if (toneWrapper) toneWrapper.classList.add('hidden');
+                if (scorePanel) scorePanel.classList.add('hidden');
+                codeLabel.classList.remove('text-gray-400');
+                codeLabel.classList.add('text-blue-600');
+                textLabel.classList.add('text-gray-400');
+                textLabel.classList.remove('text-blue-600');
+                if (humanizeBtn) humanizeBtn.textContent = 'Add Comments';
+                textOutput.outerHTML = `<pre id="text-output" class="w-full h-full p-4 overflow-y-auto resize-none focus:outline-none" contenteditable="false" data-placeholder="Your commented code will appear here..."></pre>`;
+            } else {
+                // Text Mode
+                if (toneWrapper) toneWrapper.classList.remove('hidden');
+                textLabel.classList.remove('text-gray-400');
+                textLabel.classList.add('text-blue-600');
+                codeLabel.classList.add('text-gray-400');
+                codeLabel.classList.remove('text-blue-600');
+                if (humanizeBtn) humanizeBtn.textContent = 'Humanize';
+                textOutput.outerHTML = `<div id="text-output" class="w-full h-full p-4 overflow-y-auto resize-none focus:outline-none" contenteditable="false" data-placeholder="Your humanized text will appear here..."></div>`;
+            }
+            // Re-attach listeners to the new textOutput element
+            textOutput = document.getElementById('text-output');
+            if (textOutput) {
+                textOutput.addEventListener('dblclick', handleSynonymSwap);
+                textOutput.addEventListener('input', () => updateWordCount('output'));
+            }
+        }
+
+        // --- NEW: Word Count Logic ---
+        function updateWordCount(type) {
+            const el = (type === 'input') ? document.getElementById('text-input') : document.getElementById('text-output');
+            const countEl = (type === 'input') ? document.getElementById('input-word-count') : document.getElementById('output-word-count');
+            
+            if (!el || !countEl) return;
+            
+            const text = (type === 'input') ? el.value : el.textContent || '';
+            const charCount = text.length;
+            const wordCount = (text.match(/\b\w+\b/g) || []).length;
+            
+            countEl.textContent = `${wordCount} words / ${charCount} chars`;
+        }
+
+        // --- NEW: Copy Logic ---
+        function handleCopy() {
+            const textOutput = document.getElementById('text-output');
+            if (!textOutput) return;
+            const text = textOutput.textContent || ''; // Use textContent for divs/pre
+            
+            // Use navigator.clipboard if available
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).catch(err => {
+                    console.error('Clipboard write failed, falling back', err);
+                    fallbackCopy(text);
+                });
+            } else {
+                fallbackCopy(text);
+            }
+        }
+
+        function fallbackCopy(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.setAttribute('readonly', '');
+            textarea.style.position = 'absolute';
+            textarea.style.left = '-9999px';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+            }
+            document.body.removeChild(textarea);
+        }
+
+        // --- NEW: File Upload Logic ---
+        function handleFileUpload(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            if (file.type === 'text/plain' || /\.txt$/i.test(file.name)) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const textInput = document.getElementById('text-input');
+                    if (textInput) {
+                        textInput.value = e.target.result || '';
+                        updateWordCount('input');
+                    }
+                };
+                reader.readAsText(file);
+            } else {
+                showError("Please upload a valid .txt file.");
+            }
+        }
+
+        // --- NEW: Synonym Swap Logic ---
+        async function handleSynonymSwap(e) {
+            // Only run in text mode and if the output is editable
+            const outputElement = document.getElementById('text-output');
+            const modeToggle = document.getElementById('mode-toggle');
+            if (!outputElement) return;
+            if ((modeToggle && modeToggle.checked) || outputElement.contentEditable !== 'true') return;
+
+            const selection = window.getSelection();
+            if (!selection || !selection.rangeCount || selection.isCollapsed) return;
+
+            const range = selection.getRangeAt(0);
+            const selectedText = range.toString().trim().replace(/[.,!?;:]$/, ''); // Clean punctuation
+
+            if (!selectedText || selectedText.split(' ').length > 1) {
+                return; // Only work for single words
+            }
+
+            const rect = range.getBoundingClientRect();
+            const popover = document.getElementById('synonym-popover');
+            const synonymList = document.getElementById('synonym-list');
+            const synonymLoader = document.getElementById('synonym-loader');
+
+            if (!popover || !synonymList || !synonymLoader) return;
+
+            // Position popover with viewport adjustments
+            popover.style.display = 'flex';
+            popover.setAttribute('aria-hidden', 'false');
+            const top = Math.min(window.innerHeight - 60, rect.bottom + window.scrollY + 5);
+            const left = Math.max(8, rect.left + window.scrollX);
+            popover.style.top = `${top}px`;
+            popover.style.left = `${left}px`;
+            
+            // Show loader, clear old list
+            synonymList.innerHTML = '';
+            synonymLoader.classList.remove('hidden');
+            synonymLoader.setAttribute('aria-hidden', 'false');
+
+            try {
+                // API call to Datamuse (free, no key needed)
+                const response = await fetch(`https://api.datamuse.com/words?rel_syn=${encodeURIComponent(selectedText)}`);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+
+                synonymLoader.classList.add('hidden');
+                synonymLoader.setAttribute('aria-hidden', 'true');
+                
+                if (data.length > 0) {
+                    data.slice(0, 10).forEach(item => { // Show top 10
+                        const span = document.createElement('button');
+                        span.type = 'button';
+                        span.className = 'synonym-item';
+                        span.textContent = item.word;
+                        span.onclick = () => {
+                            // Restore selection and replace text
+                            selection.removeAllRanges();
+                            selection.addRange(range);
+                            // Replace with execCommand for compatibility
+                            document.execCommand('insertText', false, item.word);
+                            
+                            popover.style.display = 'none';
+                            popover.setAttribute('aria-hidden', 'true');
+                            updateWordCount('output');
+                        };
+                        synonymList.appendChild(span);
+                    });
+                } else {
+                    synonymList.innerHTML = '<span class="text-sm text-gray-500">No synonyms found.</span>';
+                }
+
+            } catch (error) {
+                console.error("Synonym fetch error:", error);
+                synonymLoader.classList.add('hidden');
+                synonymLoader.setAttribute('aria-hidden', 'true');
+                synonymList.innerHTML = '<span class="text-sm text-red-500">Error.</span>';
+            }
+        }
+        
+        // --- AI & Readability Score Logic ---
+
+        /**
+         * Calculates simulated scores for AI detection and readability.
+         * This is a simple simulation based on heuristics.
+         */
+        function calculateMetrics(text) {
+            const words = (text && text.match(/\b\w+\b/g)) || [];
+            const sentences = (text && text.match(/[^.!?]+[.!?]+/g)) || [];
+            const syllables = (text && text.match(/[aeiouy]{1,2}/gi)) || []; // Very rough syllable count
+            
+            const wordCount = Math.max(1, words.length);
+            const sentenceCount = Math.max(1, sentences.length);
+            const syllableCount = Math.max(1, syllables.length);
+
+            if (wordCount < 10) {
+                return { aiRisk: 0, readabilityScore: 100 }; // Not enough data
+            }
+
+            const avgSentenceLength = wordCount / sentenceCount;
+
+            // Heuristic 1: AI uses formal words
+            const formalWords = (text.match(/\b(utilize|moreover|furthermore|consequently|thus|henceforth|in addition|it is imperative)\b/gi) || []).length;
+            
+            // Heuristic 2: AI avoids contractions
+            const contractions = (text.match(/\b(it's|don't|can't|won't|isn't|aren't|he's|she's|we're|they're)\b/gi) || []).length;
+
+            // --- Calculate AI Risk (0-100) ---
+            // Higher score = more risk
+            let aiRisk = 50; // Base
+            aiRisk += (formalWords * 10); // Each formal word adds risk
+            aiRisk -= (contractions * 5); // Each contraction reduces risk
+            if (avgSentenceLength > 25) aiRisk += 20; // Very long sentences add risk
+            if (avgSentenceLength < 10) aiRisk -= 10; // Short sentences reduce risk
+
+            // Clamp score between 5 and 95
+            aiRisk = Math.max(5, Math.min(95, aiRisk));
+
+            // --- Calculate Readability Score (0-100) ---
+            // Flesch-Kincaid basic formula (simplified)
+            // Higher score = easier to read
+            let readabilityScore = 206.835 - 1.015 * (avgSentenceLength) - 84.6 * (syllableCount / wordCount);
+            
+            // Clamp score between 5 and 95
+            readabilityScore = Math.max(5, Math.min(95, readabilityScore));
+
+            return { aiRisk: Math.floor(aiRisk), readabilityScore: Math.floor(readabilityScore) };
+        }
+
+        /**
+         * Updates the DOM with the new scores and animations.
+         */
+        function updateAnalytics(inputText, outputText) {
+            const beforeMetrics = calculateMetrics(inputText || '');
+            const afterMetrics = calculateMetrics(outputText || '');
+
+            // --- "Before" Panel ---
+            const beforeAiBar = document.getElementById('before-ai-bar');
+            const beforeAiText = document.getElementById('before-ai-text');
+            const beforeReadabilityBar = document.getElementById('before-readability-bar');
+            const beforeReadabilityText = document.getElementById('before-readability-text');
+
+            // --- "After" Panel ---
+            const afterAiBar = document.getElementById('after-ai-bar');
+            const afterAiText = document.getElementById('after-ai-text');
+            const afterReadabilityBar = document.getElementById('after-readability-bar');
+            const afterReadabilityText = document.getElementById('after-readability-text');
+
+            // guard
+            if (!beforeAiBar || !beforeAiText || !beforeReadabilityBar || !beforeReadabilityText || !afterAiBar || !afterAiText || !afterReadabilityBar || !afterReadabilityText) return;
+
+            // Animate / set values
+            setTimeout(() => {
+                // Before - AI Risk
+                beforeAiBar.style.width = beforeMetrics.aiRisk + '%';
+                if (beforeMetrics.aiRisk > 70) {
+                    beforeAiText.textContent = 'High';
+                    beforeAiBar.className = 'score-bar-fill bg-red-500';
+                    beforeAiText.className = 'text-sm font-bold text-red-600';
+                } else if (beforeMetrics.aiRisk > 40) {
+                    beforeAiText.textContent = 'Medium';
+                    beforeAiBar.className = 'score-bar-fill bg-yellow-500';
+                    beforeAiText.className = 'text-sm font-bold text-yellow-600';
+                } else {
+                    beforeAiText.textContent = 'Low';
+                    beforeAiBar.className = 'score-bar-fill bg-green-500';
+                    beforeAiText.className = 'text-sm font-bold text-green-600';
+                }
+
+                // Before - Readability
+                beforeReadabilityBar.style.width = beforeMetrics.readabilityScore + '%';
+                if (beforeMetrics.readabilityScore < 30) {
+                    beforeReadabilityText.textContent = 'Very Difficult';
+                    beforeReadabilityBar.className = 'score-bar-fill bg-red-500';
+                    beforeReadabilityText.className = 'text-sm font-bold text-red-600';
+                } else if (beforeMetrics.readabilityScore < 60) {
+                    beforeReadabilityText.textContent = 'Difficult';
+                    beforeReadabilityBar.className = 'score-bar-fill bg-yellow-500';
+                    beforeReadabilityText.className = 'text-sm font-bold text-yellow-600';
+                } else {
+                    beforeReadabilityText.textContent = 'Easy to Read';
+                    beforeReadabilityBar.className = 'score-bar-fill bg-green-500';
+                    beforeReadabilityText.className = 'text-sm font-bold text-green-600';
+                }
+
+                // After - AI Risk
+                afterAiBar.style.width = afterMetrics.aiRisk + '%';
+                if (afterMetrics.aiRisk > 70) {
+                    afterAiText.textContent = 'High';
+                    afterAiBar.className = 'score-bar-fill bg-red-500';
+                    afterAiText.className = 'text-sm font-bold text-red-600';
+                } else if (afterMetrics.aiRisk > 40) {
+                    afterAiText.textContent = 'Medium';
+                    afterAiBar.className = 'score-bar-fill bg-yellow-500';
+                    afterAiText.className = 'text-sm font-bold text-yellow-600';
+                } else {
+                    afterAiText.textContent = 'Low';
+                    afterAiBar.className = 'score-bar-fill bg-green-500';
+                    afterAiText.className = 'text-sm font-bold text-green-600';
+                }
+
+                // After - Readability
+                afterReadabilityBar.style.width = afterMetrics.readabilityScore + '%';
+                if (afterMetrics.readabilityScore < 30) {
+                    afterReadabilityText.textContent = 'Very Difficult';
+                    afterReadabilityBar.className = 'score-bar-fill bg-red-500';
+                    afterReadabilityText.className = 'text-sm font-bold text-red-600';
+                } else if (afterMetrics.readabilityScore < 60) {
+                    afterReadabilityText.textContent = 'Difficult';
+                    afterReadabilityBar.className = 'score-bar-fill bg-yellow-500';
+                    afterReadabilityText.className = 'text-sm font-bold text-yellow-600';
+                } else {
+                    afterReadabilityText.textContent = 'Easy to Read';
+                    afterReadabilityBar.className = 'score-bar-fill bg-green-500';
+                    afterReadabilityText.className = 'text-sm font-bold text-green-600';
+                }
+            }, 100);
+        }
+
+        // --- COOKIE BANNER LOGIC ---
+        
+        function initCookieBanner() {
+            const banner = document.getElementById('cookie-banner');
+            const acceptBtn = document.getElementById('accept-cookies');
+            
+            if (!banner || !acceptBtn) return;
+            
+            if (localStorage.getItem('cookieConsent') === 'true') {
+                banner.classList.add('hidden');
+                return; // User has already consented
+            } else {
+                banner.classList.remove('hidden');
+            }
+            
+            acceptBtn.addEventListener('click', () => {
+                localStorage.setItem('cookieConsent', 'true');
+                banner.classList.add('hidden');
+            });
+        }
+        
+        // --- MOBILE MENU LOGIC ---
+        
+        function initMobileMenu() {
+            const menuBtn = document.getElementById('mobile-menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            if (!menuBtn || !mobileMenu) return;
+            
+            menuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+        }
+
+    </script>
+</body>
+</html>
