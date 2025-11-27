@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Articlarity | 10+ Free Creator Tools</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #3b82f6; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .tool-card:hover { transform: translateY(-4px); }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
+
+    <header class="bg-white shadow-sm sticky top-0 z-40">
+        <nav class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <a href="#/" class="text-2xl font-extrabold text-blue-600 tracking-tight">Articlarity<span class="text-gray-400 text-sm font-normal ml-1">v2.0</span></a>
+            <div class="hidden md:flex space-x-6">
+                <a href="#/" class="font-medium hover:text-blue-600">Home</a>
+                <a href="#/humanizer" class="font-medium hover:text-blue-600">Humanizer</a>
+                <a href="#/compressor" class="font-medium hover:text-blue-600">Img Compress</a>
+                <a href="#/pdf-tools" class="font-medium hover:text-blue-600">PDF Tools</a>
+            </div>
+            <button onclick="document.getElementById('api-modal').classList.remove('hidden')" class="text-sm bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-lg font-medium text-gray-600">
+                🔑 API Key
+            </button>
+        </nav>
+    </header>
+
+    <main id="app-root" class="flex-grow container mx-auto px-4 py-8"></main>
+
+    <footer class="bg-gray-900 text-gray-400 mt-auto py-8 text-center">
+        <p>&copy; 2025 Articlarity. 100% Client-Side Secure.</p>
+    </footer>
+
+    <div id="api-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50 backdrop-blur-sm">
+        <div class="bg-white p-6 rounded-xl shadow-2xl max-w-md w-full mx-4">
+            <h3 class="text-xl font-bold mb-2 text-gray-900">Gemini API Key</h3>
+            <p class="text-sm text-gray-500 mb-4">Required for AI tools (Humanizer, Grammar, Summarizer).</p>
+            <input type="password" id="global-api-key" class="w-full border border-gray-300 p-3 rounded-lg mb-4 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Paste AIza... key here">
+            <div class="flex justify-end space-x-3">
+                <button onclick="document.getElementById('api-modal').classList.add('hidden')" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Close</button>
+                <button id="save-api-key" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">Save Key</button>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
